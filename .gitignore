@@ -39,8 +39,10 @@ Publish/tutorials/**/*.ch8
 Publish/tutorials/**/*.pal
 Publish/tutorials/**/*.prg
 
+units/**/*.asm
+
 # Those are problematic: some files with these extensions are checked-in
-#Publish/tutorials/**/*.bin
+Publish/tutorials/**/*.bin
 #Publish/tutorials/**/*.bin_c
 #Publish/tutorials/**/*.chr
 #Publish/tutorials/**/*.dat
@@ -52,3 +54,9 @@ bin/.asm
 Publish/tutorials/CHIP8/tutorials/test.ras
 themes
 units/CHIP8/system/system.asm
+
+Release/
+GPATH
+GRTAGS
+GTAGS
+
