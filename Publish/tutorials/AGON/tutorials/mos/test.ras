@@ -1,6 +1,8 @@
 program MyProgram;
+
+@use "system/mos"
 @use "system/str"
-@use "system/screen"
+
 var  
    i: integer; 
    l,j,k : byte;
@@ -9,6 +11,7 @@ var
 		chars : string="0123456789ABCDEF";
 
 begin
+	Mos::PutCh('C');
 //	b := "HELLO";
 	i:=$135F;
 	j:=0;
@@ -16,7 +19,7 @@ begin
 	p:=#b;
 	str::itoh(i, #b);
 //	p[j]:=0;
-	Screen::PrintString(#b);
+	Mos::PutS(#b, 0, 0);
 
 
 	loop();

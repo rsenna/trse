@@ -1,6 +1,7 @@
 unit Graphics;
 @use "system/screen"
 
+
 var
 	x1,y1,x2,y2 : integer;
 	col : byte;

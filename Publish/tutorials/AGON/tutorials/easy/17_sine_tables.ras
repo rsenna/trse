@@ -1,0 +1,35 @@
+program Sinewave;
+@use "screen/screen"
+var  
+
+	i: byte;
+	precalculated_sinewave_table: array[256] of byte;
+	x_position: byte=0;
+	symbol:	string="*";
+
+begin
+	Screen::Clear(#Screen::screen0, key_space);
+	
+	// Create a sinewave table - to be used as a fast lookup table later
+	
+	for i:=0 to 256 do begin
+		precalculated_sinewave_table[i]:=sine[i]/16;	
+	end;
+
+	// Use the table in real time to calculate a sine wave value on the fly
+	
+	while (true) do begin
+		Screen::WaitForVerticalBlank();
+		Screen::PrintString(#symbol, x_position, precalculated_sinewave_table[i], #Screen::screen0); 
+		
+		i:=i+8;
+
+		x_position+=1;
+		if (x_position=Screen::width) then begin
+			x_position:=0;
+			Screen::Clear(#Screen::screen0, key_space);
+		end;
+
+		
+	end;	
+end.

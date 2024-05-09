@@ -12,11 +12,12 @@ var
 begin
 	Screen::SetMode(Screen::mode_320_200_64);
 	Screen::DisableCursor();	
-	Screen::SetTextCol(Screen::light_green);
-	Screen::PrintString(#hello);
 	
 	while (true) offpage do
-	begin	
+	begin
+		Screen::ClearScreen();	
+		Screen::SetTextCol(Screen::light_green);
+		Screen::PrintString(#hello);
 		t:=time;
 		t2:=0-time*2;
 		px:=0;

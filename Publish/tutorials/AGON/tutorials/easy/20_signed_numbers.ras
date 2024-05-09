@@ -1,0 +1,120 @@
+program Signed_numbers_bouncing_balls;
+@use "screen/screen"
+var 
+	// Particle record - contains the position (x,y) and velocity (dx, dy) of the particle   
+   	particle = record
+   		x,y,dx,dy : signed byte;
+   		color : byte;
+	end;
+
+	// The scale of which the y-value is multiplied
+	const scale : byte = 4; // Scale of y-data
+	const ball_char : byte = 0; // petscii of ball
+	
+	const noBalls : byte = 12; // Number of balls
+
+	// Our list of heroes!
+	balls : array[ noBalls ] of particle;
+	// Counter variables
+	i,y : byte;
+	
+	sp : ^byte; // pointer to the screen, same as "pointer"
+
+// Renders th balls to the screen + color ram
+procedure RenderBalls(rb_ch:byte);
+begin
+	for i:=0 to noBalls do
+	begin
+		y:=(Screen::height-1)-balls[i].y/scale;
+		sp := $0400 + Screen::tab40[y]+balls[i].x; 
+		sp^ := rb_ch; // Draw char! same as sp[0] := rb_ch
+		sp += $D400; // point to color memory 
+		sp^ := balls[i].color; // Draw color!
+	end;
+
+end;
+
+// Clears the screen data
+procedure ClearBalls();
+begin
+	for i:=0 to noBalls do
+	begin
+		y:=(Screen::height-1)-balls[i].y/scale;
+		sp := $0400 + Screen::tab40[y]+balls[i].x; 
+		sp^ := key_space; // Draw char!
+	end;
+
+end;
+
+// Updates the balls, uses real(tm) physics!
+procedure UpdateBalls();
+begin
+	for i:=0 to noBalls do
+	begin
+		// update X position, simple enough : when colliding with a wall, reverse velocity dx:=-dx;
+		balls[i].x += balls[i].dx;
+		if (balls[i].x >= Screen::width-1 or balls[i].x <= 0) then 
+			balls[i].dx := -balls[i].dx;	 //reversd!
+			
+		// Update y-position, use some simple physics
+		// Y position is increased by the velocity
+		balls[i].y += balls[i].dy;
+		// Velocity is decreased with acceleration -1 (falling down)
+		balls[i].dy -= 1;
+		
+		// if the particle hits the lower wall, then 
+		// This step requires a signed byte!
+		if (balls[i].y<0) then
+		begin
+			// Move to above y=0
+			balls[i].y &=3; 
+			// reverse velocity, add some dampening (-2)
+			balls[i].dy := -balls[i].dy -2;
+		end;
+
+	end;
+
+end;
+
+// Initializes the balls
+procedure InitBalls();
+begin
+	for i:=0 to noBalls do
+	begin
+		// random x between 0 and screen width
+		balls[i].x := mod(random(),(Screen::width)-1);	
+		// random y in the upper half the screen
+		balls[i].y := mod(random(),Screen::height*scale/2)+Screen::height*scale/2;
+		// x-direction is random left / right 
+		if (random()>=127) then 
+			balls[i].dx := 1 
+		else 
+			balls[i].dx := -1;	
+		// Random color except for background color 
+		balls[i].color := random()&15;
+		if (balls[i].color = Screen::background) then inc(balls[i].color);
+		
+
+	end;
+
+end;
+
+
+begin
+	Screen::Clear(#Screen::screen0, key_space);
+	Screen::background := black;
+	Screen::border := green;
+	Screen::Clear(#Screen::color, black);
+	InitBalls();
+	while (true) do
+	begin	
+		// Clear previous positions
+		ClearBalls();
+		// Update
+		UpdateBalls();
+		// Render new set of balls
+		RenderBalls(ball_char);
+		for i:=0 to 2 do
+			Screen::WaitForVerticalBlank();
+	end;
+end.

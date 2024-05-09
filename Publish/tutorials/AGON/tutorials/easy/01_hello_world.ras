@@ -1,0 +1,38 @@
+program HelloWorld;
+
+@use "system/screen"
+@use "memory"
+
+var  
+	// you can split strings into several substrings	
+  	text: string = ("HELLO ", "WORLD", 0);
+	cheap_scroller: string = ("YES THIS IS A VERY LONG STRING AND IT WILL NOT LOOK PARTICULARLY NICE WHEN IT REACHES ITS END BECAUSE THERE IS NO TEST WHETHER THE STRING SHOULD WRAP OR NOT... YES THIS IS A VERY LONG STRING AND IT W", 0);
+	i, j: byte;
+	ptr: ^byte;	
+begin
+	Screen::ClearScreen();
+	// Fill the screen (at screen0 = $400) with  40*25 bytes of character $20 - "space"
+	//Screen::Clear(#Screen::screen0, key_space);
+	// Fill the color ram with yellow
+	//Screen::Clear(#Screen::color, yellow);
+	// Print a string at 10, 12 	
+	Screen::PrintString(#text, 10, 12, #Screen::Screen0);
+	// Print another string directly
+	Screen::PrintString(cstring("THIS IS ANOTHER STRING 123"), 10,14,#Screen::Screen0);
+	// Infinite loop
+	while (true) do
+	begin
+		// Wait a bit
+		for j:=0 to 4 do
+			Screen::WaitForVerticalBlank();
+			
+		// Point ptr to line 22 on the screen
+		ptr := #Screen::screen0 + screen_width*22;	
+		// Copy the data from the cstring to the screen
+		Memory::Copy(#cheap_scroller + i, ptr, 40);
+		// Increase the counter
+		i+=1;
+		// Reset the text counter when the reaches the end of the string
+		if (i+40>length(cheap_scroller)) then i:=0;
+	end;
+end.
