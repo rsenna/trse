@@ -1,0 +1,38 @@
+program Rasters;
+@use "screen/screen"
+var
+	const useKernal:byte=0;
+
+
+interrupt IRQ1();
+
+interrupt IRQ0();
+begin
+	StartIRQ(useKernal);
+	Screen::border:=red;
+	RasterIRQ(IRQ1(),$40,useKernal);
+	CloseIRQ();
+end;
+
+interrupt IRQ2();
+begin
+	StartIRQ(useKernal);
+	Screen::border:=yellow;
+	RasterIRQ(IRQ0(),$00,useKernal);
+	CloseIRQ();
+end;
+
+interrupt IRQ1();
+begin
+	StartIRQ(useKernal);
+	Screen::border:=green;
+	RasterIRQ(IRQ2(),$80,useKernal);
+	CloseIRQ();
+end;
+
+begin
+	disableciainterrupts(); // prevent CIA
+	setmemoryconfig(1,0,0); // Enable all ram, turn off BASIC
+	StartRasterChain(IRQ0(), 0,useKernal); // Don't use kernal
+	Loop(); 
+end.

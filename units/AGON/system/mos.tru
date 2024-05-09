@@ -1,0 +1,103 @@
+unit Mos;
+
+var
+	ix, iy: integer;
+	i, bi, bj, bk, bl, bm: byte;
+	psrc, pdst, p: ^byte;
+	cmd: array[16] of byte;
+	
+	const rst_reset: byte = $00;
+	const rst_execute: byte = $08;
+	const rst_output_char: byte = $10;
+	const rst_output_string: byte = $18;
+	
+	const cmd_getkey: byte = $00;
+	const cmd_load: byte = $01;
+	const cmd_save: byte = $02;
+	const cmd_cd: byte = $03;
+	const cmd_dir: byte = $04;
+	const cmd_del: byte = $05;
+	const cmd_ren: byte = $06;
+    const cmd_mkdir: byte = $07;
+	const cmd_sysvars: byte = $08;
+    const cmd_edditline: byte = $09;
+	const cmd_fopen: byte = $0a;
+	const cmd_fclose: byte = $0b;
+    const cmd_fgetc: byte = $0c;
+    const cmd_fputc: byte = $0d;
+    const cmd_feof: byte = $0e;
+    const cmd_geterror: byte = $0f;
+    const cmd_oscli: byte = $10;
+    const cmd_copy: byte = $11;
+    const cmd_getrtc: byte = $12;
+    const cmd_setrtc: byte = $13;
+    const cmd_setintvector: byte = $14;
+    const cmd_uopen: byte = $15;
+    const cmd_uclose: byte = $16;
+    const cmd_ugetc: byte = $17;
+    const cmd_uputc: byte = $18;
+    const cmd_getfil: byte = $19;
+    const cmd_fread: byte = $1a;
+    const cmd_fwrite: byte = $1b;
+    const cmd_flseek: byte = $1c;
+    const cmd_setkbvector: byte = $1d;
+    const cmd_getkbmap: byte = $1e;
+    const cmd_i2c_open: byte = $1f;
+    const cmd_i2c_close: byte = $20;
+    const cmd_i2c_write: byte = $21;
+    const cmd_i2c_read: byte = $22;
+
+    const ffs_open: byte = $80;
+    const ffs_close: byte = $81;
+    const ffs_fread: byte = $82;
+    const ffs_fwrite: byte = $83;
+    const ffs_feof: byte = $8e;
+    const ffs_fstat: byte = $96;
+	
+// TODO functions
+
+@macro "rst" 1
+	writeln(`rst.lil ${p1}`);
+@endmacro
+
+procedure PutCh(bi: global byte pure_variable) inline;
+asm
+	ld a, ([Mos_bi])
+	@rst(RST_OUTPUT_CHAR)
+end;
+
+procedure PutCh(bi: global byte pure_number) inline;
+asm
+	ld a, [Mos_bi]
+	@rst(RST_OUTPUT_CHAR)
+end;
+
+procedure PutCh(bi: global byte) inline;
+asm
+	ld a, (Mos_bi)
+	@rst(RST_OUTPUT_CHAR)
+end;
+
+procedure PutS(psrc: global ^byte, ix: global integer, bi: global byte);
+
+asm
+	ld hl, (Mos_psrc)		    // Address of buffer
+	ld bc, (Mos_ix)			    // Size to write from buffer - or 0 if using delimiter
+	ld a, (Mos_bi)				// Delimiter: only if size is 0
+	@rst(RST_OUTPUT_CHAR)   	// Write a block of bytes out to the ESP32
+end;
+
+
+end.
+
+
+
+
+
+
+
+
+
+
+
+
