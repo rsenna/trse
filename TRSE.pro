@@ -130,6 +130,7 @@ linux*{
     # TODO(ColinPitrat): Progressively fix and activate the most valuable warnings. Looseley ordered so that the last ones are the most valuable to remove.
     QMAKE_CXXFLAGS += -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-value -Wno-sign-compare -Wno-missing-field-initializers -Wno-delete-non-virtual-dtor -Wno-type-limits -Wno-stringop-overflow
     QMAKE_CXXFLAGS += -Wno-unused-result -Wno-implicit-fallthrough -Wno-format-truncation -Wno-mismatched-new-delete
+    QMAKE_CXXFLAGS += -Wno-maybe-uninitialized -Wno-template-id-cdtor
     LIBS += -fopenmp
     QMAKE_CXXFLAGS_RELEASE += -Ofast
     LIBS += -L$$PWD/libs/lua/ -llua -ldl

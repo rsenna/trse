@@ -238,7 +238,7 @@ static int parse_int(const char ** expression,const int linenum){
         exit_error("error%d: Invalid Immediate\n", linenum);
     if (base!=10)
         (*expression)++;
-    return (int)strtol(*expression, expression, base);
+    return (int)strtol(*expression, (char **) expression, base);
 }
 
 
