@@ -16,7 +16,23 @@ Turbo Rascal Syntax Error full repo
 First, clone this repo to a TRSE directory.
 
 ### Linux
-- apt-get install qt5-default qt5-qmake qtdeclarative5-dev mesa-common-dev
+
+#### Debian/Ubuntu
+```bash
+sudo apt install qt5-default qt5-qmake qtdeclarative5-dev mesa-common-dev
+```
+
+#### Fedora 40
+```bash
+# Using Qt 6
+sudo dnf install qt-devel qt6-qtbase-devel qt6-qt3d qt6-qtdeclarative-devel mesa-libGL-devel 
+sudo dnf install qt-creator      # C++ ide for QT, optional
+```
+
+#### ARM chromebook/ARM computers (Debian based)
+```bash
+sudo apt install qtbase5-dev qt5-qmake qtbase5-dev-tools qtdeclarative5-dev
+```
 
 On windows/macos, you need to download and install the qt libraries, msvc, xcode etc:
 
@@ -24,19 +40,18 @@ On windows/macos, you need to download and install the qt libraries, msvc, xcode
 - install MSVC 2019
 - download the Qt framework from https://www.qt.io/download. Install the latest framework of Qt6 (desktop application).
 
-### Macos
+### MacOS
 - install Xcode 
 - download the Qt framework from https://www.qt.io/download. Install the latest framework of Qt6 (desktop application).
 
-### ARM chromebook/ARM computers
-- sudo apt install qtbase5-dev qt5-qmake qtbase5-dev-tools qtdeclarative5-dev
-
 ## Compiling
-- qmake TRSE.pro
-- make -j8 
+```bash
+qmake TRSE.pro
+make -j8 
+```
 
-
-Select "Release", and under the qt project/build make sure you set the build directory to be **TRSE/Release**
+### On Qt Creator project settings
+Select "Release", and under the qt project/build make sure you set the build directory to be `Release/bin`
 
 ## After first compile:
 TRSE uses a couple of directories that needs to be linked with symlinks:
