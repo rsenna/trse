@@ -55,6 +55,8 @@ Publish/tutorials/CHIP8/tutorials/test.ras
 themes
 units/CHIP8/system/system.asm
 
+# rsenna
+build/
 Release/
 GPATH
 GRTAGS

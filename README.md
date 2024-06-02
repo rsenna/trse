@@ -26,7 +26,8 @@ sudo apt install qt5-default qt5-qmake qtdeclarative5-dev mesa-common-dev
 ```bash
 # Using Qt 6
 sudo dnf install qt-devel qt6-qtbase-devel qt6-qt3d qt6-qtdeclarative-devel mesa-libGL-devel 
-sudo dnf install qt-creator      # C++ ide for QT, optional
+sudo dnf install qt-creator           # C++ ide for QT, optional
+sudo dnf install libasan libubsan     # AddressSanitizer
 ```
 
 #### ARM chromebook/ARM computers (Debian based)
