@@ -1,5 +1,5 @@
 program MyProgram;
-//@use "system/str"
+@use "system/str"
 @use "system/screen"
 var  
    i: integer; 

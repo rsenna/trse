@@ -80,6 +80,8 @@ begin
 	t2:=111;
 	while (true) do
 	begin
+		Screen::ClearScreen();
+		Screen::PrintString("Realtime calculation... ");
 		Render();
 		time+=1;
 		if (time&1=0) then t2+=1;

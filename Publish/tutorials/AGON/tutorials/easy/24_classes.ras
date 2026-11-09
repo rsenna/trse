@@ -1,0 +1,178 @@
+program Classes;
+@use "screen/screen"
+var  
+    i,j,shift,k: byte = 0;
+	dx,dy : byte;
+	p : ^byte;
+/*
+	The famous MCMC random walk!	
+
+*/	
+	randomTable : array[256] of byte;
+
+	Point = class
+		x,y : byte;		
+	end;
+
+	Monster = class
+		
+		prevPos,pos : Point;
+		color : byte; // Current colour of monster
+		name : array[6] of byte; // Classes supports arrays		
+
+
+		procedure Init();
+		begin
+			this.pos.x:=mod(random(),screen_width); // Random x-position
+			this.pos.y:=mod(random(),screen_height); // Random t-position
+			this.prevPos.x := this.pos.x;
+			this.prevPos.y := this.pos.y;
+		// Produce a random name of 3 chars
+			this.name[0] := random()/16+1;
+			this.name[1] := random()/16+1;
+			this.name[2] := random()/16+1;
+			this.name[3] := 0;
+			this.color:=mod(random(),14)+blue+1; // Random colour excluding background
+		end;
+		
+		
+		procedure Update();
+		begin		
+			this.prevPos.x := this.pos.x;
+			this.prevPos.y := this.pos.y;
+			j:=randomTable[k];
+			dx:=0;
+			dy:=0;
+
+	 		if (this.pos.x<>1) then
+	 			if (j=0) then dx:=-1;
+	 		if (this.pos.x<>Screen::width-2) then
+				if (j=3) then dx:=1; // Wall X
+
+			k+=11;			
+			j:=randomTable[k];
+
+			if (this.pos.y<>1) then // Wall Y
+				if (j=0) then dy:=-1;
+
+			if (this.pos.y<>Screen::height-1) then // Wall Y
+				if (j=3) then dy:=1;
+
+			this.pos.x+=dx;
+			this.pos.y+=dy;
+		end;
+
+
+		procedure Render(rchar:byte);
+		begin
+			// Clear previous stuff
+			p:=#Screen::screen0 + Screen::tab40[this.prevPos.y] + this.prevPos.x;
+			p[0]:=key_space;
+			p-=41;
+			p[0]:=key_space;
+			p[1]:=key_space;
+			p[2]:=key_space;
+			
+			// Paint char!
+			p:=#Screen::screen0 + Screen::tab40[this.pos.y] + this.pos.x;
+			p[0]:=rchar;
+			// Paint colors 
+			p+=$D400;
+			p[0]:=this.color;
+			p-=41;
+			// Text color
+			p[0]:=this.color;
+			p[1]:=this.color;
+			p[2]:=this.color;
+			
+			
+			// Paint text
+			p:=#Screen::screen0 + Screen::tab40[this.pos.y-1] + this.pos.x-1;
+			// Print name
+			for j:=0 to 3 do
+				p[j] := this.name[j];
+	
+		end;
+		
+		
+	end;
+
+
+	// Number of walkers
+	const no : byte = 16;
+	// Monster array allocation will fail if it is an array. 
+	monsters : array[no] of Monster;
+	// The following is allowed even if Monster contains an array
+	singleMonster : Monster;
+
+	pm : pointer of Monster;
+
+/*
+	Initialize all the monsters
+*/
+
+
+procedure InitMonsters();
+begin
+	for i:=0 to no do
+	begin
+		monsters[i].Init();
+	end;
+
+end;
+
+
+/*
+	Render all the monsters by first erasing the old position, then paining the new
+*/
+procedure RenderMonsters(render_char:byte);
+begin
+	for i:=0 to no do
+	begin
+		// Direct call
+		monsters[i].Render(render_char);
+	end;	
+
+end;
+
+
+
+// Random walk: up, down,left,right, stop at walls
+// Uses a lookup random table to decide which direction to go
+procedure UpdateMonsters();
+begin
+	k:=shift;
+	for i:=0 to no do
+	begin
+		monsters[i].Update();
+	end;	
+
+end;
+
+ 
+begin
+	
+	// Initialize
+	Screen::background:=blue;
+	Screen::border:=blue;
+	Screen::Clear(#Screen::screen0,key_space);
+	Screen::Clear(#Screen::color,black);
+	// Initialize tables
+	for i:=0 to 256 do 
+		randomTable[i]:=random()&3;
+
+
+		
+	InitMonsters();
+	// Loop	
+	while (true) do
+	begin
+		UpdateMonsters();
+		RenderMonsters(0);// 'at' sign
+		// Wait a bit each frame
+		for i:=0 to 4 do
+			Screen::WaitForVerticalBlank();
+		shift+=1; // Some prime number
+	end;	
+
+end.

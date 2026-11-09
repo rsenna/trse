@@ -1,0 +1,75 @@
+program String_manipulation;
+@use "system/str"
+@use "screen/screen"
+var
+	longString : string ="I MEOW YOU KNOW";
+	splitString : array[64] of byte;
+	// Could also have been
+	// splitString : string = "                                                                ";
+	sp: pointer; // Pointer to a string
+	// Temporary buffer
+	buf : array[256] of byte;
+
+	ii : integer = 12345;
+	
+	lst : array[] of string = ("NEED","MORE","CATNIP");
+
+/*
+	In this example, we use various string methods to manipulate
+	the string "longString". Examples include:
+		- String splitting
+		- Comparing strings
+		- getting strings from index in string lists
+
+*/
+
+
+begin
+	Screen::Clear(#Screen::screen0, key_space);
+	
+	Screen::PrintString(#longString,5,2, #Screen::screen0);
+
+	// Splits "longstring" with token " ", save in "splitString"
+	strsplit(#longString,#splitString,key_space);
+	// sp now points to the first word in the string list
+	sp:=strgetfromindex(#splitString,0);
+	// strcmp compares a string/pointer to another string/pointer
+	if (strcmp(sp,"I")) then 
+		Screen::PrintString("ALWAYS ABOUT YOURSELF...",5,5, #Screen::screen0);
+	
+	sp:=strgetfromindex(#splitString,1);
+	Screen::PrintString(sp,7,8, #Screen::screen0);
+
+	sp:=strgetfromindex(#splitString,3);
+	Screen::PrintString(sp,9,10, #Screen::screen0);
+
+	sp:=strgetfromindex(#splitString,2);
+	Screen::PrintString(sp,11,12, #Screen::screen0);
+
+
+	// Using the new global string library (not finished yet)
+	
+	// convert the number "ii" to decimal:
+	str::itoa(ii, #buf, 10);
+	Screen::PrintString(#buf,11,14, #Screen::screen0);
+	
+	
+	
+	// convert the number in "ii" to hex
+	str::itoa(ii, #buf, 16);
+	Screen::PrintString(#buf,19,14, #Screen::screen0);
+	
+
+	// Copy a substring to the buffer ("MEOW")
+	str::substr(#buf, #longString, 2,4);
+	Screen::PrintString(#buf,10,17, #Screen::screen0);
+	
+	// Copy a substring to the buffer ("MEOW")
+	Screen::PrintString(lst[0],0,19, #Screen::screen0);
+	Screen::PrintString(lst[1],10,19, #Screen::screen0);
+	Screen::PrintString(lst[2],20,19, #Screen::screen0);
+	
+	
+	Loop();
+
+end.
