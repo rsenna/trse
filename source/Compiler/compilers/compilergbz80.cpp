@@ -10,10 +10,12 @@ void CompilerGBZ80::InitAssemblerAnddispatcher(QSharedPointer<AbstractSystem> sy
     m_assembler = QSharedPointer<AsmZ80>(new AsmZ80());//
     m_codeGen = QSharedPointer<CodeGenZ80>(new CodeGenZ80());
     //    m_assembler->Asm("CPU "+m_projectIni->getString("cpu_GBZ80_system"));
-
-    m_assembler->IncludeFile(":resources/code/gameboy/defs.s");
-    m_assembler->IncludeFile(":resources/code/gameboy/gbt_player.inc");
-    m_assembler->IncludeFile(":resources/code/gameboy/init.s");
+    if (Syntax::s.m_currentSystem->m_systemParams["ignoresystemheaders"] != "1")
+    {
+        m_assembler->IncludeFile(":resources/code/gameboy/defs.s");
+        m_assembler->IncludeFile(":resources/code/gameboy/gbt_player.inc");
+        m_assembler->IncludeFile(":resources/code/gameboy/init.s");
+    }
 
 
 
@@ -40,7 +42,7 @@ void CompilerGBZ80::Connect()
 
     m_assembler->m_source <<m_assembler->m_sprram->m_source;
 
-    m_assembler->m_source <<"nada_wram_padding : ds "+Util::numToHex(0x100-m_assembler->m_sprram->m_dataSize);
+    m_assembler->m_source <<"nada_wram_padding: ds "+Util::numToHex(0x100-m_assembler->m_sprram->m_dataSize);
 
 
     //    m_assembler->m_wram->m_source.insert(0,"		SECTION	\"WRAM\",WRAM0[$C100]"		);
@@ -68,7 +70,7 @@ bool CompilerGBZ80::SetupMemoryAnalyzer(QString filename, Orgasm* orgAsm)
     int i=0;
     int maxB1  = codeStart;
     int maxV1  = varStart;
-    QMap<int,QSharedPointer<MemoryBlock>> banks;
+    QHash<int,QSharedPointer<MemoryBlock>> banks;
     while (!done) {
         if (lst[i].length()==0) {
             done=++i>=lst.length();

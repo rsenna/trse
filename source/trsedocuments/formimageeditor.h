@@ -82,7 +82,7 @@ public:
     Toolbox m_toolBox;
     LColorList* m_currentColorList = nullptr;
     LImageEffects m_imageEffects;
-    QMap<QString, QLineEdit*> m_imageEffectsLineEdits;
+    QHash<QString, QLineEdit*> m_imageEffectsLineEdits;
     LImageEffect* m_currentImageEffect = nullptr;
     QString m_projectPath;
     QVector<int> m_keepSpriteChar;
@@ -328,6 +328,7 @@ private slots:
     void on_btnGridType_clicked();
     void on_btnRoomSelect_clicked();
     void on_splitter_splitterMoved(int pos, int index);
+    void on_btnSpritepad_clicked();
 };
 
 

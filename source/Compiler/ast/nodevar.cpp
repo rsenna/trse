@@ -36,7 +36,7 @@ NodeVar::NodeVar(Token t, QSharedPointer<Node> expr) : Node() {
 
 }
 
-void NodeVar::ReplaceInline(Assembler* as,QMap<QString, QSharedPointer<Node> > &inp)
+void NodeVar::ReplaceInline(Assembler* as,QHash<QString, QSharedPointer<Node> > &inp)
 {
     if (m_expr!=nullptr)
         m_expr->ReplaceInline(as,inp);
@@ -263,6 +263,10 @@ bool NodeVar::isRecord(Assembler *as)
 
 bool NodeVar::isStackVariable()
 {
+    if (s_as==nullptr)
+        return false;
+    if (s_as->m_symTab==nullptr)
+        return false;
     QSharedPointer<Symbol> s = s_as->m_symTab->Lookup(value,m_op.m_lineNumber,true);
     if (s==nullptr)
         return false;

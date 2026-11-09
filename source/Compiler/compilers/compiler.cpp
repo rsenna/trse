@@ -48,6 +48,8 @@ void Compiler::Parse(QString text, QStringList lst, QString fname)
 
     connect(&m_parser, SIGNAL(emitRequestSystemChange(QString)), this, SLOT( AcceptRequestSystemChange(QString)));
     Data::data.genLabel = 0;
+//   SymbolTable::m_forwardedSymbols.clear();
+//    SymbolTable::m_forwardedVariables.clear();
 
     m_tree = nullptr;
     m_parser.m_preprocessorDefines[m_projectIni->getString("system").toUpper()]="1";
@@ -55,6 +57,8 @@ void Compiler::Parse(QString text, QStringList lst, QString fname)
     if (m_projectIni->getString("qemu").startsWith("qemu")) {
         m_parser.m_preprocessorDefines["QEMU"] = "1";
     }
+
+    Syntax::s.m_currentSystem->m_systemParams["ignoresystemheaders"] = "0";
     m_parser.m_isTRU = m_isTRU;
     Parser::s_usedTRUs.clear(); // None TRU's are marked
     Parser::s_usedTRUNames.clear(); // None TRU's are marked
@@ -76,6 +80,9 @@ void Compiler::Parse(QString text, QStringList lst, QString fname)
     }
     if (m_parser.m_symTab!=nullptr)
         m_parser.m_symTab->SetCurrentProcedure("");
+
+//    if (m_tree!=nullptr)
+  //      m_tree->Optimize();
 }
 
 
@@ -113,8 +120,9 @@ bool Compiler::Build(QSharedPointer<AbstractSystem> system, QString project_dir)
     // COPY SYMBOL TABLE
     m_assembler->m_symTab->m_forwardedVariables = m_parser.m_symTab->m_forwardedVariables;
 
-    for (QString s: m_parser.m_symTab->m_forwardedVariables)
+    for (QString s: m_parser.m_symTab->m_forwardedVariables) {
         m_assembler->m_symTab->m_forwardedSymbols[s] = m_parser.m_symTab->m_symbols[s];
+    }
 //    qDebug() << "COMPILER.CPP "<<m_parser.m_symTab->m_forwardedVariables;
 
 //    m_assembler->m_symTab->m_forwardedSymbols = m_parser.m_symTab->m_forwardedSymbols;
@@ -183,7 +191,7 @@ bool Compiler::Build(QSharedPointer<AbstractSystem> system, QString project_dir)
 
 void Compiler::CleanupBlockLinenumbers()
 {
-    QMap<int, int> blocks;
+    QHash<int, int> blocks;
 
     for (int i: m_assembler->m_blockIndent.keys()) {
 
@@ -360,7 +368,7 @@ void Compiler::WarningUnusedVariables()
 
 }
 
-void Compiler::ApplyOptions(QMap<QString, QStringList> &opt) {
+void Compiler::ApplyOptions(QHash<QString, QStringList> &opt) {
     for (auto& s: opt.keys()) {
         if (s.toLower()=="define") {
             QStringList lst = opt[s];

@@ -6,12 +6,17 @@ on:
     tags:
       - 'nightly'
 
+
+permissions:
+  contents: write        
+  packages: write        
+
 jobs:
   build:
-    runs-on: windows-2019
+    runs-on: windows-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v6
       # Increment version. Ideally we would like to do it once for all builds,
       # but this is complicated as we want to allow to trigger a nightly by
       # pushing the tag, so this can't be in nightly.yml. One option would be to
@@ -25,21 +30,21 @@ jobs:
           let version=${version}+1
           sed -i "s/define NIGHTLY .*/define NIGHTLY $version/" source/LeLib/data.cpp
           version=$(grep "define \(MAJOR\|FEATURE\|NIGHTLY\)" source/LeLib/data.cpp | awk '{ print $3 }' | xargs | sed 's/ /\./g')
-          echo "::set-output name=TRSE_VERSION::${version}"
-      - uses: microsoft/setup-msbuild@v1
+          echo "TRSE_VERSION=${version}" >> $GITHUB_OUTPUT
+      - uses: microsoft/setup-msbuild@v3
 
-      - uses: jurplel/install-qt-action@v2
+      - uses: jurplel/install-qt-action@v4
         with:
-          version: '6.0.1'
-          tools: 'tools_ifw,4.0.0,qt.tools.ifw.40 tools_qtcreator,9.0.0,qt.tools.qtcreator'
+          version: '6.9.1'
+          tools: 'tools_ifw tools_qtcreator,qt.tools.qtcreator'
 
 
       - name: Build TRSE
         shell: cmd
         run: |
-          call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+          for /f "usebackq delims=" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find VC\Auxiliary\Build\vcvarsall.bat`) do call "%%i" x86_amd64
           qmake TRSE.pro
-          D:\a\TRSE\Qt\Tools\QtCreator\bin\jom\jom.exe -j 2 -f Makefile.Release
+          D:\a\TRSE\Qt\Tools\QtCreator\bin\jom\jom.exe -j 4 -f Makefile.Release
 
       # OK64 doesn't build with Qt 6.0 or Qt 6.1 (no Qt Multimedia). Hopefully this will be fixed with Qt 6.2.
       #- name: Build OK64
@@ -47,7 +52,7 @@ jobs:
       #  run: |
       #    git clone https://github.com/leuat/OK64.git
       #    cd OK64/OK64
-      #    call "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
+      #    call "C:\Program Files (x86)\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x86_amd64
       #    qmake INCLUDEPATH=$OK64dir/resid/include QMAKE_LFLAGS=-Wl,-L$OK64dir/resid/lib/ OK64.pro
       #    D:\a\TRSE\Qt\Tools\QtCreator\bin\jom.exe -j 2 -f Makefile.Release
 
@@ -74,6 +79,7 @@ jobs:
           # The files are converted to dos format at checkout, we don't want the carriage returns.
           dos2unix ../plugins.txt
           dos2unix ../ignore_dlls.txt
+          windeployqt --release --compiler-runtime .    
           while read plugin
           do
             echo "  Looking for '${plugin}'"
@@ -104,20 +110,74 @@ jobs:
           7z a trse_win.zip trse
 
       - name: Publish zip
-        uses: ColinPitrat/update-release@master
+        uses: softprops/action-gh-release@v3
         with:
-          release: nightly
-          message: Nightly build
+          name: nightly
           body: TRSE ${{ steps.version.outputs.TRSE_VERSION }} <br/> The latest automated nightly build of TRSE which succeeded. This is the recommended version to use.
           files: Publish/publish_win/trse_win.zip
           prerelease: false
+          make_latest: true
+          draft: false
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Discord notification
+        if: always()
+        shell: bash
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          STATUS="SUCCESS"
+          if [ "${{ job.status }}" != "success" ]; then
+            STATUS="FAILURE"
+          fi
+
+          VERSION="${{ steps.version.outputs.TRSE_VERSION }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT=$(printf '**Windows Nightly Build: %s**\nVersion: %s\nRun: %s' "$STATUS" "$VERSION" "$RUN_URL")
+
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL is empty; skipping Discord notification"
+            exit 0
+          fi
+
+          # Build JSON safely to avoid invalid payloads when values contain special characters.
+          payload=$(jq -nc \
+            --arg content "$CONTENT" \
+            '{content: $content}')
+
+          response_file=$(mktemp)
+          http_code=$(curl -sS -o "$response_file" -w "%{http_code}" \
+            -X POST \
+            --connect-timeout 10 \
+            --max-time 20 \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$DISCORD_WEBHOOK_URL")
+
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "Discord webhook failed with HTTP $http_code"
+            cat "$response_file"
+            exit 1
+          fi
 
       - name: Build notification
         if: failure()
-        uses: adamkdean/simple-slack-notify@master
+        continue-on-error: true
+        shell: bash
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        with:
-          channel: #bugs
-          text: "[GitHub Actions Notification] Windows build failed: ${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}"
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL is empty; skipping Slack notification"
+            exit 0
+          fi
+
+          payload=$(printf '{"channel":"#bugs","text":"[GitHub Actions Notification] Windows build failed: %s/%s/actions/runs/%s"}' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          curl -sS \
+            --connect-timeout 10 \
+            --max-time 20 \
+            -X POST \
+            -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"

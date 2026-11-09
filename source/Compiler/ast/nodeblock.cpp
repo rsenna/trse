@@ -36,7 +36,7 @@ void NodeBlock::SetParameter(QString name, PVar var) {
     s->m_value = QSharedPointer<PVar>(new PVar(var));
 }
 
-void NodeBlock::ReplaceInline(Assembler* as,QMap<QString, QSharedPointer<Node> > &inp)
+void NodeBlock::ReplaceInline(Assembler* as,QHash<QString, QSharedPointer<Node> > &inp)
 {
     if (m_compoundStatement!=nullptr)
         m_compoundStatement->ReplaceInline(as,inp);
@@ -83,4 +83,10 @@ void NodeBlock::ResetInlineAssembler()
 {
     if (m_compoundStatement!=nullptr)
         m_compoundStatement->ResetInlineAssembler();
+}
+
+bool NodeBlock::Optimize() {
+    if (m_compoundStatement!=nullptr)
+        m_compoundStatement->Optimize();
+    return false;
 }

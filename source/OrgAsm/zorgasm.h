@@ -28,10 +28,12 @@ public:
     }
 
 
+    void ProcessSource() override;
+
     void ApplyCPUType() override;
 
     void LoadCodes(int CPUflavor) override;
-    QMap<QString,int> m_opCodes;
+    QHash<QString,int> m_opCodes;
     QString m_opCode;
 
     QString WashForOpcode(QString s, QString& value,OrgasmLine& ol);

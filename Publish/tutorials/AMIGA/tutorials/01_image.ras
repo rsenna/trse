@@ -2,6 +2,7 @@ program Image;
 @use "graphics"
 var  
 
+
 /*
 
 	This example initialises a 320x256 16-color image
@@ -43,9 +44,11 @@ var
 // Some random image   	
 
 begin
+	
 	// Set to default interleaved 4-bpl screen, point to the 320x256 image
 	Graphics::SetupDefaultScreen(#image,noBitPlanes);	
 	// Sets the palette in the copper list
 	setpalette(#image_palette,#copper_palette,noColors);
+	
 	loop();
 end.

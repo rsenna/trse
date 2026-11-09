@@ -700,8 +700,9 @@ void Orgasm::ProcessByteData(OrgasmLine &ol,OrgasmData::PassType pt)
 
             }
 
-
+            s = s.trimmed();
             m_data.append(Util::NumberFromStringHex(s,ok));
+
             if (!ok && !(s.startsWith("<") || s.startsWith('>') || s.startsWith('^'))) {
                 throw OrgasmError("Incorrect number format: "+s, ol);
 
@@ -810,7 +811,7 @@ void Orgasm::ProcessLong24Data(OrgasmLine &ol)
     }
 
 
-    QMap <QString, int> g;
+    QHash <QString, int> g;
 
 
     QStringList lst = ol.m_expr.split(",");
@@ -1116,7 +1117,7 @@ void Orgasm::SaveSymbolsList(QString filename)
         QFile::remove(filename);
 
     QFile file( filename );
-    QMap<int, bool> isSet;
+    QHash<int, bool> isSet;
     if ( file.open(QIODevice::ReadWrite) )
     {
         QTextStream stream( &file );

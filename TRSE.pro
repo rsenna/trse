@@ -3,6 +3,7 @@
 # Project created by QtCreator 2018-02-03T17:17:06
 #
 #-------------------------------------------------
+CONFIG += c++17
 
 QT += core gui opengl qml
 QT += widgets
@@ -11,11 +12,10 @@ equals(VER, 6) {
     QT += openglwidgets
 }
 
-CONFIG += c++14
 
-#CONFIG(debug, debug|release) {
-#    CONFIG += sanitizer sanitize_address sanitize_undefined sanitize_threads
-#}
+CONFIG(debug, debug|release) {
+    #CONFIG += sanitizer sanitize_address sanitize_undefined sanitize_threads
+}
 
 TARGET = trse
 TEMPLATE = app
@@ -36,59 +36,32 @@ ICON = trse.icns
 #QMAKE_CXXFLAGS_WARN_OFF += -Wunused-parameter
 QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter -Wno-unused-but-set-variable -Wno-unused-function -Wno-delete-non-abstract-non-virtual-dtor -Wno-overloaded-virtual -Wno-unused-variable -Wno-missing-field-initializers -Wno-sign-compare
 ARCH = $$QMAKE_HOST.arch
-#############################ARCH = arm64
+
 
 macx{
-#    CONFIG += warn_off
-
-    #LIBS += -openmp
-#    ICON = trse.icns
-    QMAKE_CXXFLAGS += -Ofast
+    QMAKE_CXXFLAGS += -O3
     QMAKE_CXXFLAGS += -Werror=return-type -Werror=deprecated-declarations
-#    QMAKE_CXXFLAGS_WARN_ON += -Wno-unused-parameter
 
+    # AGL is removed from recent macOS SDKs. Override qmake's OpenGL defaults
+    # to avoid injecting AGL include/lib flags from the mkspec.
+    QMAKE_INCDIR_OPENGL =
+    QMAKE_LIBS_OPENGL = -framework OpenGL
+    LIBS -= -framework AGL
+
+    QMAKE_APPLE_DEVICE_ARCHS = arm64
 
     LIBS += -L$$PWD/libs
     LIBS += -ldl
-#    QMAKE_LFLAGS += -F /Library/Frameworks
-#    LIBS += -framework SDL2
-
-#    LIBS += -L/usr/local/lib
-    #DEFINES -=USE_OMP
-#    contains(DEFINES, USE_OMP) {
- #     QMAKE_CXXFLAxGS += -Xpreprocessor -fopenmp  -I/usr/local/include
- #   }
-
-#    QMAKE_CXXFLAGS += -Xpreprocessor -fopenmp -I/usr/local/include -I/opt/homebrew/Cellar/libomp/15.0.3/include
     QMAKE_CXXFLAGS += -Xpreprocessor -fopenmp -I/usr/local/include
+    LIBS+= -L/opt/homebrew/opt/libomp/lib
 
-    contains(ARCH, arm64): {
-      message("Arme meg!")
-#      QMAKE_APPLE_DEVICE_ARCHS=arm64
-      LIBS += -L$$PWD/libs/lua/ -lluamac_arm
-      CONFIG += arm64
-      QMAKE_CXXFLAGS+= -I/opt/homebrew/opt/libomp/include
-      LIBS+= -L/opt/homebrew/opt/libomp/lib
+    QMAKE_CXXFLAGS+= -I/opt/homebrew/opt/libomp/include
 
-    }
-    contains(ARCH, x86_64) |contains(ARCH, amd64):  {
-        LIBS += -L$$PWD/libs/lua/ -lluamac -L/usr/local/opt/libomp/lib
-        QMAKE_CXXFLAGS+= -I/usr/local/opt/libomp/include
-        LIBS += -L/usr/local/opt/libomp/lib
+    message("Arme meg!")
+    LIBS += -L$$PWD/libs/lua/ -lluamac_arm
+    CONFIG += arm64
 
-   }
-   LIBS+= -lomp
-#   LIBS += -L$$PWD/libs/lua/ -lluamac
-
-#   INCLUDEPATH += /usr/local/include/
-#   INCLUDEPATH += /opt/homebrew/include/
-
-#   LIBS +=  -L/Users/leuat/code/sdl-x86/Versions/A -lSDL2
-
-
-#    QMAKE_CXXFLAGS += -Xpreprocessor -fopenmp -lomp -I/opt/homebrew/include/
-#   QMAKE_LFLAGS += -lomp
-#     LIBS += -L /opt/homebrew/lib
+    LIBS+= -lomp
 
     DEPLOY = $$(DEPLOY)
     contains(DEPLOY, yes) {
@@ -126,7 +99,8 @@ win32-msvc*{
 }
 
 linux*{
-    QMAKE_CXXFLAGS += -fopenmp -Wall -Werror
+    QMAKE_CXXFLAGS -= -Werror
+    QMAKE_CXXFLAGS += -fopenmp -Wall #-Werror
     # TODO(ColinPitrat): Progressively fix and activate the most valuable warnings. Looseley ordered so that the last ones are the most valuable to remove.
     QMAKE_CXXFLAGS += -Wno-unused-variable -Wno-unused-parameter -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-value -Wno-sign-compare -Wno-missing-field-initializers -Wno-delete-non-virtual-dtor -Wno-type-limits -Wno-stringop-overflow
     QMAKE_CXXFLAGS += -Wno-unused-result -Wno-implicit-fallthrough -Wno-format-truncation -Wno-mismatched-new-delete
@@ -1089,6 +1063,9 @@ DISTFILES += \
     resources/text/help/r/begin.rtf \
     resources/text/help/r/byte.rtf \
     resources/text/help/r/chipmem.rtf \
+    resources/text/help/r/cpcexport0.rtf \
+    resources/text/help/r/cpcexportpal.rtf \
+    resources/text/help/r/cpcexporttile0.rtf \
     resources/text/help/r/cstring.rtf \
     resources/text/help/r/define.rtf \
     resources/text/help/r/do.rtf \
@@ -1129,7 +1106,9 @@ DISTFILES += \
     resources/text/help/r/use.rtf \
     resources/text/help/r/userdata.rtf \
     resources/text/help/r/var.rtf \
+    resources/text/help/r/vbmexportchunk.rtf \
     resources/text/help/r/vbmexportcolor.rtf \
+    resources/text/help/r/vbmexportpixel.rtf \
     resources/text/help/r/vicmemoryconfig.rtf \
     resources/text/help/r/wedge.rtf \
     resources/text/help/r/while.rtf \

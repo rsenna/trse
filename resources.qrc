@@ -772,5 +772,11 @@
         <file>resources/images/AGON.png</file>
         <file>resources/images/PRIMO.png</file>
         <file>resources/images/tutorials/timtris.png</file>
+        <file>resources/text/help/m/setlo.rtf</file>
+        <file>resources/text/help/m/sethi.rtf</file>
+        <file>resources/text/help/r/cpcexport0.rtf</file>
+        <file>resources/text/help/r/cpcexportpal.rtf</file>
+        <file>resources/text/help/r/cpcexporttile0.rtf</file>
+        <file>resources/text/help/r/vbmexportpixel.rtf</file>
     </qresource>
 </RCC>

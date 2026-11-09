@@ -66,7 +66,7 @@ class Util {
 public:
 
     static QElapsedTimer globalTimer;
-    static QMap<QString, long> sm_fileSizes;
+    static QHash<QString, long> sm_fileSizes;
 
 
     static char** StringListToChar(QStringList lst);
@@ -148,6 +148,7 @@ public:
     static QString listFiles(QDir directory, QString searchFile);
     static float floatRandom(const float & min, const float & max);
     static wchar_t* QStringToWchar(QString t);
+    static QStringList QStringToDataList(QStringList& t);
 
     static void SaveByteArray(QByteArray& data, QString file);
 

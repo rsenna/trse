@@ -602,6 +602,12 @@ void Methods6502::Assemble(Assembler *as, AbstractCodeGen* dispatcher) {
     if (Command("poke"))
         Poke(as);
 
+    if (Command("sethi"))
+        SetLoHi(as,1);
+
+    if (Command("setlo"))
+        SetLoHi(as,0);
+
     if (Command("createaddresstable"))
         CreateAddressTable(as);
 
@@ -1119,6 +1125,21 @@ void Methods6502::Peek(Assembler* as)
     LoadVar(as,0,"x");
     //SaveVar(as,2);
 
+}
+
+void Methods6502::SetLoHi(Assembler *as, int type)
+{
+    // Optimization : if parameter 1 is zero, drop the ldx / tax
+    as->Comment("Set Lo / Hi");
+    //m_node->RequireAddress(m_node->m_params[0],"Poke", m_node->m_op.m_lineNumber);
+//    AddMemoryBlock(as,0);
+
+    // Parameter is pointer
+    QSharedPointer<NodeVar> var = qSharedPointerDynamicCast<NodeVar>(m_node->m_params[0]);
+    var->m_expr = NodeFactory::CreateNumber(m_node->m_op,type);
+    auto assign = NodeFactory::CreateAssign(m_node->m_op,var,m_node->m_params[1]);
+    assign->Accept(m_codeGen);
+    return;
 }
 
 void Methods6502::Modulo(Assembler *as)
@@ -3001,7 +3022,7 @@ void Methods6502::LoHi(Assembler *as, int type)
             as->Asm("lda " + m_node->m_params[0]->getAddress()+"+2");
         return;
     }
-    if (m_node->m_params[0]->getType(as)==TokenType::ADDRESS) {
+    if (m_node->m_params[0]->getType(as)==TokenType::ADDRESS || m_node->m_params[0]->getType(as)==TokenType::INCBIN) {
         if (type==0)
             as->Asm("lda #<" + m_node->m_params[0]->getAddress());
         if (type==1)
@@ -5463,10 +5484,10 @@ void Methods6502::DisableInterrupts(Assembler *as)
 
     if (Syntax::s.m_currentSystem->m_system == AbstractSystem::C64 || Syntax::s.m_currentSystem->m_system == AbstractSystem::MEGA65) {
         as->Asm("ldy #$7f    ; $7f = %01111111");
-        as->Asm("sty $dc0d   ; Turn off CIAs Timer interrupts");
-        as->Asm("sty $dd0d   ; Turn off CIAs Timer interrupts");
-        as->Asm("lda $dc0d   ; cancel all CIA-IRQs in queue/unprocessed");
-        as->Asm("lda $dd0d   ; cancel all CIA-IRQs in queue/unprocessed");
+        as->Asm("sty $dc0d   ; Turn off CIAs Timer interrupts ;keep");
+        as->Asm("sty $dd0d   ; Turn off CIAs Timer interrupts ;keep");
+        as->Asm("lda $dc0d   ; cancel all CIA-IRQs in queue/unprocessed ;keep");
+        as->Asm("lda $dd0d   ; cancel all CIA-IRQs in queue/unprocessed ;keep");
     }
     else if (Syntax::s.m_currentSystem->m_system == AbstractSystem::PLUS4) {
         as->Asm("lda #$00");
@@ -6602,7 +6623,7 @@ void Methods6502::EnableInterrupts(Assembler* as) {
     as->Asm("cli");
 }
 */
-void Methods6502::SaveVar(Assembler *as, int paramNo, QString reg, QString extra)
+void Methods6502::SaveVar(Assembler *as, int paramNo, QString reg, QString shift)
 {
 
 //    qDebug() << "SAVEVAR: " <<  TokenType::getType(m_node->m_params[paramNo]->getType(as));
@@ -6610,7 +6631,7 @@ void Methods6502::SaveVar(Assembler *as, int paramNo, QString reg, QString extra
     if (!(m_node->m_params[paramNo]->isVariable() || m_node->m_params[paramNo]->isAddress()))
         ErrorHandler::e.Error("Parameter "+QString::number(paramNo) + " must be a variable or address", m_node->m_op.m_lineNumber);
 
-    QString vName = m_node->m_params[paramNo]->getValue(as);
+    QString vName = m_node->m_params[paramNo]->getValue(as) + shift;
     QSharedPointer<NodeVar> v = qSharedPointerDynamicCast<NodeVar>(m_node->m_params[paramNo]);
     as->Term();
 
@@ -6644,20 +6665,6 @@ void Methods6502::SaveVar(Assembler *as, int paramNo, QString reg, QString extra
     as->Asm("ta"+x);
     as->Asm("pla");
     as->Asm("sta "+pa+vName+pb + ","+x);
-
-
-/*    as->ClearTerm();
-    if (extra=="")
-        as->Term("sta ");
-    else
-        as->Term(extra);
-
-    m_node->m_params[paramNo]->Accept(m_codeGen);
-
-    if (reg!="")
-        reg = "," + reg;
-    as->Term(reg, true);
-*/
 }
 
 

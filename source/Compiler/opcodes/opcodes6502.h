@@ -3,8 +3,8 @@
 #include <QString>
 #include <QStringList>
 #include <QVector>
+#include <QHash>
 #include <QMap>
-
 
 
 

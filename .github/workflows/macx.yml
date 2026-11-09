@@ -10,7 +10,7 @@ jobs:
     runs-on: macos-latest
     timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v5
       # Increment version. Ideally we would like to do it once for all builds,
       # but this is complicated as we want to allow to trigger a nightly by
       # pushing the tag, so this can't be in nightly.yml. One option would be to
@@ -25,29 +25,111 @@ jobs:
           # backup file, empty string disables backup)
           sed -i '' "s/define NIGHTLY .*/define NIGHTLY $version/" source/LeLib/data.cpp
           version=$(grep "define \(MAJOR\|FEATURE\|NIGHTLY\)" source/LeLib/data.cpp | awk '{ print $3 }' | xargs | sed 's/ /\./g')
-          echo "::set-output name=TRSE_VERSION::${version}"
-      - uses: actions/setup-node@v1
-      - uses: jurplel/install-qt-action@v2
+          echo "TRSE_VERSION=${version}" >> $GITHUB_OUTPUT
+      - uses: actions/setup-node@v5
+      - uses: jurplel/install-qt-action@v4
+        with:
+          aqtversion: '==3.1.*'
+          version: '6.6.0'
+          host: 'mac'
+          target: 'desktop'
+          arch: 'clang_64'      
       - run: brew install libomp
 
-      - run: qmake TRSE.pro
-      - run: make -j 3
+      - name: Remove obsolete AGL references from Qt
+        run: |
+          QT_ROOT="$RUNNER_WORKSPACE/Qt/6.6.0/macos"
+          if [ -d "$QT_ROOT/lib" ]; then
+            grep -RIl --include="*.prl" -- "-framework AGL" "$QT_ROOT/lib" | while read -r prl; do
+              sed -i '' 's/-framework AGL//g' "$prl"
+            done
+          fi
 
-      - run: cd Publish/publish_mac && ./publish_mac.sh nightly
-      - uses: ColinPitrat/update-release@master
+      - run: qmake TRSE.pro
+      - name: Build
+        run: |
+          sed -i '' 's/-framework AGL//g' Makefile
+          make -j 4 arch=arm64
+
+      - name: Codesign executable
+        env: 
+          DEVELOPER_ID: ${{ secrets.DEVELOPER_ID }}
+          MACOS_CERTIFICATE: ${{ secrets.MACOS_CERTIFICATE }}
+          MACOS_CERTIFICATE_PWD: ${{ secrets.MACOS_CERTIFICATE_PWD }}
+        run: |
+          echo $MACOS_CERTIFICATE | base64 --decode > certificate.p12
+          security create-keychain -p hurra build.keychain 
+          security default-keychain -s build.keychain
+          security unlock-keychain -p hurra build.keychain
+          security import certificate.p12 -k build.keychain -P $MACOS_CERTIFICATE_PWD -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k hurra build.keychain
+          security find-identity -v
+          cd Publish/publish_mac && ./publish_mac.sh nightly $DEVELOPER_ID
+      - uses: softprops/action-gh-release@v3
         with:
-          release: nightly
-          message: Nightly build
+          name: nightly
           body: TRSE ${{ steps.version.outputs.TRSE_VERSION }} <br/> The latest automated nightly build of TRSE which succeeded. This is the recommended version to use.
           files: Publish/publish_mac/trse_osx.tar.gz
           prerelease: false
+          make_latest: true
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Discord notification
+        if: always()
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          STATUS="SUCCESS"
+          if [ "${{ job.status }}" != "success" ]; then
+            STATUS="FAILURE"
+          fi
+
+          VERSION="${{ steps.version.outputs.TRSE_VERSION }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          CONTENT=$(printf '**MacOS Nightly Build: %s**\nVersion: %s\nRun: %s' "$STATUS" "$VERSION" "$RUN_URL")
+
+          if [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "DISCORD_WEBHOOK_URL is empty; skipping Discord notification"
+            exit 0
+          fi
+
+          # Build JSON safely to avoid invalid payloads when values contain special characters.
+          payload=$(jq -nc \
+            --arg content "$CONTENT" \
+            '{content: $content}')
+
+          response_file=$(mktemp)
+          http_code=$(curl -sS -o "$response_file" -w "%{http_code}" \
+            -X POST \
+            --connect-timeout 10 \
+            --max-time 20 \
+            -H "Content-Type: application/json" \
+            -d "$payload" \
+            "$DISCORD_WEBHOOK_URL")
+
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "Discord webhook failed with HTTP $http_code"
+            cat "$response_file"
+            exit 1
+          fi
 
       - name: Build notification
         if: failure()
-        uses: adamkdean/simple-slack-notify@master
+        continue-on-error: true
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
-        with:
-          channel: #bugs
-          text: "[GitHub Actions Notification] MacOS build failed: ${env.GITHUB_SERVER_URL}/${env.GITHUB_REPOSITORY}/actions/runs/${env.GITHUB_RUN_ID}"
+        run: |
+          if [ -z "$SLACK_WEBHOOK_URL" ]; then
+            echo "SLACK_WEBHOOK_URL is empty; skipping Slack notification"
+            exit 0
+          fi
+
+          payload=$(printf '{"channel":"#bugs","text":"[GitHub Actions Notification] MacOS build failed: %s/%s/actions/runs/%s"}' \
+            "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID")
+          curl -sS \
+            --connect-timeout 10 \
+            --max-time 20 \
+            -X POST \
+            -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_WEBHOOK_URL"

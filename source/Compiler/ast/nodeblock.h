@@ -81,7 +81,7 @@ public:
     }
 
     void SetParameter(QString name, PVar var);
-    void ReplaceInline(Assembler* as,QMap< QString,QSharedPointer<Node>>& inp) override;
+    void ReplaceInline(Assembler* as,QHash< QString,QSharedPointer<Node>>& inp) override;
     void ReplaceInlineAssemblerVariables(Assembler* as, QString var, QString val) override;
 
     void PopZeroPointers(Assembler* as);
@@ -105,6 +105,8 @@ public:
         Node::ReplaceVariable(as,name,node);
         m_compoundStatement->ReplaceVariable(as,name,node);
     }
+    virtual bool Optimize() override;
+
 
 };
 

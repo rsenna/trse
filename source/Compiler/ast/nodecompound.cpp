@@ -43,7 +43,7 @@ void NodeCompound::ReplaceVariable(Assembler *as, QString name, QSharedPointer<N
         n->ReplaceVariable(as,name,node);
 }
 
-void NodeCompound::ReplaceInline(Assembler* as,QMap<QString, QSharedPointer<Node> > &inp)
+void NodeCompound::ReplaceInline(Assembler* as,QHash<QString, QSharedPointer<Node> > &inp)
 {
     for (auto n: children)
         n->ReplaceInline(as, inp);
@@ -61,5 +61,19 @@ void NodeCompound::ResetInlineAssembler()
     for (auto n: children)
         n->ResetInlineAssembler();
 
+}
+
+bool NodeCompound::Optimize() {
+    QVector<QSharedPointer<Node>> removal;
+    for (auto n: children) {
+        if (n->Optimize())
+            removal.append(n);
+    }
+//    children.remove(removal);
+    for (auto n: removal) {
+        qDebug() << "Optimizing...";
+        children.removeAll(n);
+    }
+    return false;
 }
 

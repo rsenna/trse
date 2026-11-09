@@ -73,6 +73,7 @@ public:
     bool editPalette = true;
     bool displayColors = true;
     bool displayCmbColors = true;
+    bool spritepadImport = false;
 
     bool exportc = false;
     bool importc = false;
@@ -127,11 +128,11 @@ public:
                    tabLevels, tabCharset, tabData, tabSprites, tabEffects, col1,col2,col3,col4};
 
 
-    QMap<QString, float> m_exportParams;
-    QMap<QString, QString> m_exportParamsComments;
+    QHash<QString, float> m_exportParams;
+    QHash<QString, QString> m_exportParamsComments;
     QVector<int> m_ignoreValues;
 
-    QMap<GUIType, QString> m_GUIParams;
+    QHash<GUIType, QString> m_GUIParams;
 
 
     virtual bool isNes() {return false;}
@@ -199,16 +200,19 @@ public:
     virtual void VBMExport(QFile& file, int p1, int p2, int p3, int p4) {}
     virtual void VBMExportColor(QFile& file, int p1, int p2, int p3, int p4) {}
     virtual void VBMExportChunk(QFile& file, int p1, int p2, int p3, int p4) {}
+    virtual void VBMExportPixel(QFile& file, int start, int width, int height, int isMultiColor) {}
     virtual void VBMCompileChunk(QTextStream& f, QString procName, QString pointerName, QString asmOperation, int p1, int p2, int p3, int p4) {}
 
     virtual void CopySingleChar(LImage* src, int srcChar, int dstChar) {qDebug() << "CopySingleChar not implemented";}
 
     virtual void ExportBlackWhite(QFile& file, int p1, int p2, int p3, int p4, int type) {}
 
+    virtual void CPCExport0(QFile& file, int xpos, int ypos, int width, int height) {}
+    virtual void CPCExportTile0(QFile& file, int start, int end, int width, int height) {}
 
-    virtual void SetForceD800Color(int val) {
+    virtual void CPCExportPal(QFile &ofile) {}
 
-    }
+    virtual void SetForceD800Color(int val) {}
 
     virtual QStringList SpriteCompiler(QString name, QString currentDir, QString src, QString dst, int x, int y, int w, int h, QString pparam) {return QStringList();}
 
@@ -325,7 +329,7 @@ public:
 
 //    virtual void AddNew(int x, int y) {};
 
-    virtual void RenderEffect(QMap<QString, float> params) {}
+    virtual void RenderEffect(QHash<QString, float> params) {}
 
     virtual void CopyChar();
 
@@ -399,6 +403,8 @@ public:
         return QStringList() <<"Tiles 1"<<"Tiles 2"<<"Tiles 3"<<"Tiles 4"<<"Sprites 1"<<"Sprites 2"<<"Sprites 3"<<"Sprites 4";;
     }
 
+
+    virtual void ImportSpritepad(QString filename) {}
 
     virtual void ExportRGB8Palette(QString filename);
 

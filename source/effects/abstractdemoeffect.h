@@ -3,13 +3,14 @@
 
 #include <QImage>
 #include <QThread>
-#include <QMap>
+#include <QHash>
 #include <QGridLayout>
 #include <QLabel>
 #include <QLineEdit>
 #include <QDebug>
 #include "source/LeLib/limage/charsetimage.h"
 #include <QElapsedTimer>
+#include <QMap>
 
 class DemoEffectParam {
 public:

@@ -26,7 +26,7 @@
 #include <QVector>
 #include "token.h"
 #include <QDebug>
-#include <QMap>
+#include <QHash>
 #include <QList>
 #include "pvar.h"
 #include "errorhandler.h"
@@ -34,10 +34,11 @@
 
 class C64Key {
 public:
-    QString m_name;
-    QString m_key;
-    unsigned char m_value;
-    unsigned char m_row, m_column;
+    QString m_name = "";
+    QString m_key = "";
+    unsigned char m_value = 0;
+    unsigned char m_row = 0;
+    unsigned char m_column = 0;
 
     C64Key() {}
     C64Key(QString name, QString key, int value, int row, int column) {
@@ -99,7 +100,7 @@ public:
 */
     QStringList m_illegaVariableNames;
     //QVector<BuiltInFunction> builtinFunctions;
-    QMap<QString, BuiltInFunction> builtInFunctions, builtinFunctionsFjong;
+    QHash<QString, BuiltInFunction> builtInFunctions, builtinFunctionsFjong;
   //  enum System {C64, VIC20, PET, NES, C128, BBCM, AMIGA};
     QString m_syntaxData; // File syntax data
     QString m_systemString;
@@ -108,14 +109,14 @@ public:
 
     QString thisName = "this";
 
-    QMap<QString, bool> m_reservedWordsRegularFont;
+    QHash<QString, bool> m_reservedWordsRegularFont;
 
     QSharedPointer<AbstractSystem> m_currentSystem;
     bool m_ignoreSys = false;
     void Init(AbstractSystem::System s, QSharedPointer<CIniFile> m_ini, QSharedPointer<CIniFile> m_proj);
     void SetupReservedWords(QVector<Token>& list, QString id, bool ignoreSystem);
     void SetupIllegalVariables();
-    void SetupBuiltinFunctions(QMap<QString, BuiltInFunction>& lst, AbstractSystem::System s, QString id, bool ignoreSystem);
+    void SetupBuiltinFunctions(QHash<QString, BuiltInFunction>& lst, AbstractSystem::System s, QString id, bool ignoreSystem);
     void SetupKeys();
     void LoadSyntaxData();
     void Reload();
@@ -132,7 +133,7 @@ public:
     void SetupConstants();
 
 
-    QMap<unsigned char, C64Key> m_c64keys;
+    QHash<unsigned char, C64Key> m_c64keys;
 
     static Syntax s;
 
